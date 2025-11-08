@@ -5,10 +5,10 @@ RUN apk add --no-cache maven
 WORKDIR /app
 
 # Копируем pom.xml и src из подпапки back
-COPY back/pom.xml .
+COPY pom.xml .
 RUN mvn dependency:go-offline
 
-COPY back/src ./src
+COPY src ./src
 
 RUN mvn clean package -DskipTests
 
