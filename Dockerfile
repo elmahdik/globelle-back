@@ -1,18 +1,23 @@
-# Используем официальный образ Eclipse Temurin с Java 23
+# Используем Java 23
 FROM eclipse-temurin:23-jdk-alpine
 
-# Устанавливаем рабочую директорию внутри контейнера
+# Устанавливаем Maven
+RUN apk add --no-cache maven
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем все файлы проекта
-COPY . .
+# Копируем pom.xml и скачиваем зависимости
+COPY pom.xml .
+RUN mvn dependency:go-offline
 
-# Собираем проект через Maven wrapper
-RUN ./mvnw clean package -DskipTests
+# Копируем исходники
+COPY src ./src
 
-# Указываем команду запуска приложения
-# Render будет подставлять переменную $PORT, если нужно
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar target/globelle-back.jar"]
+# Собираем проект
+RUN mvn clean package -DskipTests
 
-# Открываем порт 8080 (Render автоматически пробрасывает $PORT)
+# Запускаем собранный JAR
+CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar target/*.jar"]
+
 EXPOSE 8080
