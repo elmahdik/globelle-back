@@ -1,17 +1,16 @@
-FROM eclipse-temurin:23-jdk-alpine
-
-RUN apk add --no-cache maven
+FROM maven:3.9.6-eclipse-temurin-23 AS build
 
 WORKDIR /app
 
-# Копируем pom.xml и src из подпапки back
-COPY back/pom.xml .
-RUN mvn dependency:go-offline
-
-COPY back/src ./src
+COPY pom.xml .
+COPY src ./src
 
 RUN mvn clean package -DskipTests
 
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar target/*.jar"]
+FROM eclipse-temurin:23-jre
 
-EXPOSE 8080
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar app.jar"]
